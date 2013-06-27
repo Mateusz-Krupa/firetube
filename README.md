@@ -1,9 +1,9 @@
 FireTube
 ========
 
-A simple example of using Firebase security rules to secure a YouTube-like comment system.
+A simple example of using AngularFire to secure a YouTube-like comment system.
 
-### [Live Demo](http://firebase.github.com/firetube/)
+### [Live Demo](http://firetube.site44.com/)
 
 License
 -------
