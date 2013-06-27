@@ -1,46 +1,31 @@
-var commentsRef = new Firebase('https://firetube.firebaseio.com/comments');
-var myUserID = null;
+angular.module("firetube", ["firebase"]).controller(
+  "Firetube", ["$scope", "angularFireCollection", "angularFireAuth",
+  function($scope, angularFireCollection, angularFireAuth) {
+    var url = "https://angularfiretube.firebaseio.com/comments";
+    angularFireAuth.initialize(url, {scope: $scope, name: "user"});
 
-//Create an Firebase Simple Login client so we can do Facebook auth
-var authClient = new FirebaseAuthClient(commentsRef, function(error, user) {
-  if(user) {
-    myUserID = user.id;
-    $("#loginDiv").text(user.first_name + " " + user.last_name);
-  }
-});
+    var ref = new Firebase(url);
+    $scope.comments = angularFireCollection(ref.limit(10));
 
-//Create a query for only the last 10 comments
-var last10Comments = commentsRef.limit(10);
-
-//Render Comments
-last10Comments.on('child_added', function (snapshot) {
-  var comment = snapshot.val();
-  var newDiv = $("<div/>").addClass("comment").attr("id",snapshot.name()).appendTo("#comments");
-  FB.api("/" + comment.userid, function(userdata) {
-    comment.name = userdata.name;
-    newDiv.html(Mustache.to_html($('#template').html(), comment));
-  });
-});
-
-//Add New Comments
-function onCommentKeyDown(event) {
-  if(event.keyCode == 13) {
-    if(myUserID == null) {
-      alert("You must log in to leave a comment");
-    } else {
-      commentsRef.push({userid: myUserID, body: $("#text").val()})
-      $("#text").val("");
+    $scope.login = function() {
+      angularFireAuth.login("facebook");
     }
-    event.preventDefault();
+    $scope.logout = function() {
+      angularFireAuth.logout();
+    }
+    $scope.addComment = function(e) {
+      if (e.keyCode != 13) {
+        return;
+      }
+      if (!$scope.user) {
+        alert("You must be logged in to leave a comment");
+      } else {
+        $scope.comments.add({
+          name: $scope.user.name, id: $scope.user.id, body: $scope.newComment
+        });
+        $scope.newComment = "";
+        e.preventDefault();
+      }
+    }
   }
-}
-
-//Remove deleted comments
-last10Comments.on("child_removed", function(snapshot) {
-  $("#" + snapshot.name()).remove();
-});
-
-//Handle Login
-function onLoginButtonClicked() {
-  authClient.login("facebook");
-}
+]);
